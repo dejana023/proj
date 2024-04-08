@@ -16,8 +16,8 @@
 #define DELAY 10
 
 //ADRESE
-#define addr_Pixels1 25400
-#define addr_index1 0
+#define addr_Pixels1 0
+#define addr_index1 17000
 
 
 #define addr_start 100300

@@ -348,19 +348,19 @@ void Cpu::createVector(double scale, double row, double col) {
           
           write_hard_double(addr_rpos, rpos);
           
-                    cout << "rpos CPU: " << rpos << endl;
+                    //cout << "rpos CPU: " << rpos << endl;
           
           write_hard_double(addr_cpos, cpos);
           
-                    cout << "cpos CPU: " << cpos << endl;
+                    //cout << "cpos CPU: " << cpos << endl;
           
           write_hard_double(addr_rx, rx);
           
-                    cout << "rx CPU: " << rx << endl;
+                    //cout << "rx CPU: " << rx << endl;
           
           write_hard_double(addr_cx, cx);
           
-                    cout << "cx CPU: " << cx << endl;
+                    //cout << "cx CPU: " << cx << endl;
           
           write_hard_int(addr_step, step);
           
@@ -369,11 +369,11 @@ void Cpu::createVector(double scale, double row, double col) {
           write_hard_double(addr_sine, _sine);
           
           
-          cout << "_sine CPU: " << _sine << endl;
+                    //cout << "_sine CPU: " << _sine << endl;
           
           write_hard_double(addr_cose, _cose);
           
-                    cout << "_cose CPU: " << _cose << endl;
+                    //cout << "_cose CPU: " << _cose << endl;
           
           unsigned char *pixels1D = nullptr;
           
@@ -381,6 +381,7 @@ void Cpu::createVector(double scale, double row, double col) {
           {     
               if(ready)
               {
+                  
                   pixels1D = new unsigned char[_width * _height];
                   int pixels1D_index = 0;
                   for (int w = 0; w < _width; w++)
@@ -392,21 +393,23 @@ void Cpu::createVector(double scale, double row, double col) {
                   }
                   
           //ISPIS PIXELSA    
-              for (int y = 0; y < _height; ++y)
+              /*for (int y = 0; y < _width; ++y)
     	      {
-                  for (int x = 0; x < _width; ++x)
+                  for (int x = 0; x < _height; ++x)
                   {
-                      std::cout << static_cast<int>(pixels1D[y * _width + x]) << " ";
+                      std::cout << static_cast<int>(pixels1D[y * _height + x]) << " ";
                   }
                   std::cout << std::endl;
               }  
-                  
-              for (int i = 0; i < _width * _height; i++)
-                  write_mem(i, pixels1D[i]);
-                  
-              delete[] pixels1D;
               
-              need_start = 1;
+              std::cout << "///////////////////////////////////////////////////////////" << endl;
+                */  
+                  for (int i = 0; i < _width * _height; i++)
+                      write_mem(addr_Pixels1+i, pixels1D[i]);
+                  
+                  delete[] pixels1D;
+              
+                  need_start = 1;
               
               }
               

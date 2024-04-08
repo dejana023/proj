@@ -65,7 +65,7 @@ Surf::Surf(Image *im, bool dbl, int insi){
 
   // create _lookup tables
   createLookups();
-
+ 
   double** tempPixels = _iimage->getPixels();
   _Pixels.resize(_height);
   for (int i = 0; i < _height; ++i) {
@@ -279,7 +279,7 @@ void Surf::createVector(double scale, double y, double x) {
   radius = 1.4 * spacing * (_IndexSize + 1) / 2.0;
   iradius = (int) (radius/step + 0.5);
   //std::cout << "radius: " << radius << ", iradius: " << iradius << endl;
-
+  
   // Examine all points from the gradient image that could lie within the
   // _index square.
   for (i = -iradius; i <= iradius; i++)
@@ -341,6 +341,8 @@ void Surf::AddSample(num_i r, num_i c, num_f rpos,
   //this->ispisiIndex();
   //this->ispisiPixels();
   
+  
+ // cout << "r: " << r << " " ;
   // Clip at image boundaries.
   if (r < 1+step  ||  r >= _height - 1-step  ||
       c < 1+step  ||  c >= _width - 1-step)

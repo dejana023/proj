@@ -13,6 +13,11 @@ Ip::Ip(sc_module_name name) :
         cout << "IP constructed" << endl;
 }
     
+    
+Ip::~Ip()
+{
+	SC_REPORT_INFO("Ip", "Destroyed");
+}
 
 
 void Ip::b_transport(pl_t& pl, sc_time& offset)
@@ -34,74 +39,45 @@ void Ip::b_transport(pl_t& pl, sc_time& offset)
                     break;
                 case addr_r:
                     r = toInt(buf);
-                                                  cout << "r IP: " << r << endl;
+                                                  //cout << "r IP: " << r << endl;
                     break;
                 case addr_c:
                     c = toInt(buf);
-                                                  cout << "c IP: " << c << endl;
+                                                  //cout << "c IP: " << c << endl;
                     break;
                 case addr_rpos:
                     rpos = toDouble(buf);
-                                                  cout << "rpos IP: " << rpos << endl;
+                                                  //cout << "rpos IP: " << rpos << endl;
                     break;
                 case addr_cpos:
                     cpos = toDouble(buf);
-                                                  cout << "cpos IP: " << cpos << endl;
+                                                  //cout << "cpos IP: " << cpos << endl;
                     break;
                 case addr_rx:
                     rx = toDouble(buf);
-                                                  cout << "rx IP: " << rx << endl;
+                                                  //cout << "rx IP: " << rx << endl;
                     break;
                 case addr_cx:
                     cx = toDouble(buf);
-                                                  cout << "cx IP: " << cx << endl;
+                                                  //cout << "cx IP: " << cx << endl;
                     break;
                 case addr_step:
                     step = toInt(buf);
-                                                  cout << "step IP: " << step << endl;
+                                                  //cout << "step IP: " << step << endl;
                     break;
                 case addr_cose:
                     _cose = toDouble(buf);
-                                                  cout << "_cose IP: " << _cose << endl;
+                                                  //cout << "_cose IP: " << _cose << endl;
                     break;
                 case addr_sine:
                     _sine = toDouble(buf);
-                              cout << "_sine IP: " << _sine << endl;
+                             			  //cout << "_sine IP: " << _sine << endl;
                     break;
                     
                 default:
                     pl.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
                     cout << "Wrong address" << endl;
             }
-           /* if (address == 22002) {
-                num_i* r = reinterpret_cast<num_i*> (buf_non_const);
-            }
-            else if (address == 22003) {
-                num_i* c = reinterpret_cast<num_i*> (buf_non_const);
-            }
-            else if (address == 22004) {
-                num_f* rpos = reinterpret_cast<num_f*> (buf_non_const);
-            }
-            else if (address == 22005) {
-                num_f* cpos = reinterpret_cast<num_f*> (buf_non_const);            
-            }
-            else if (address == 22006) {
-                num_f* rx = reinterpret_cast<num_f*> (buf_non_const);            
-            }
-            else if (address == 22007) {
-                num_f* cx = reinterpret_cast<num_f*> (buf_non_const);            
-            }
-            else if (address == 22008) {
-                num_f* scale = reinterpret_cast<num_f*> (buf_non_const);
-            }
-            else if (address == 22009) {
-                num_f* _cose = reinterpret_cast<num_f*> (buf_non_const);
-            }
-            else if (address == 22010) {
-                num_f* _sine = reinterpret_cast<num_f*> (buf_non_const);
-            }
-
-            pl.set_response_status(TLM_OK_RESPONSE);*/
             break;
                 
         case TLM_READ_COMMAND:
@@ -122,21 +98,26 @@ void Ip::b_transport(pl_t& pl, sc_time& offset)
     offset += sc_time(10, SC_NS);
 }
 
-//Funkcije se moraju prilagoditi systemC-u
+
 void Ip::AddSample(num_i r, num_i c, num_f rpos,
                      num_f cpos, num_f rx, num_f cx, num_i step) {
                      
-              unsigned char *pixels1D = nullptr;                 
+                     cout<< "Uslo u addsample" << endl;
+                     cout << "start" << start << ", ready " << ready << endl;
+                     
+              unsigned char *pixels1D;                 
                      
     if (start == 1 && ready == 1)
     {
+    
+        cout << "Uslo u start=1 i ready=1" << endl;
         ready = 0;
         offset += sc_time(DELAY, SC_NS);
     }
     
     else if (start == 0 && ready == 0)
     {
-        cout << "Processing started" << endl;
+       cout << "Processing started" << endl;
         
        pixels1D = new unsigned char[_width * _height];
        int pixels1D_index = 0;
@@ -147,68 +128,101 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
                pixels1D[pixels1D_index++] = read_mem(addr_Pixels1 + (w * _height + h));
            }
        }
-    }
+       
+       /*for (int w = 0; w < _width; w++) {
+       for (int h = 0; h < _height; h++) {
+               std::cout << static_cast<int>(pixels1D[w * _height + h]) << " ";
+       }
+           }*/
 
-    num_f** _Pixels = new num_f*[_width];
-    for (int i = 0; i < _width; i++) {
-        _Pixels[i] = new num_f[_height];
-    }
-    
-    int pixels1D_index2 = 0;
-    for (int w = 0; w < _width; w++) {
-        for (int h = 0; h < _height; h++) {
-            _Pixels[w][h] = static_cast<num_f>(pixels1D[pixels1D_index2++]);
+        num_f** _Pixels = new num_f*[_width];
+        for (int i = 0; i < _width; i++) {
+            _Pixels[i] = new num_f[_height];
         }
-    }   
-        
-    num_f weight;
-    num_f dx, dy;
     
-    for (int n=0;n<40;n++)
-        _lookup2[n]=exp(-((num_f)(n+0.5))/8.0);
-  
-    if (r < 1+step  ||  r >= _height - 1-step  ||
-         c < 1+step  ||  c >= _width - 1-step)
-    return;
+    
+        int pixels1D_index2 = 0;
+        for (int w = 0; w < _width; w++) {
+            for (int h = 0; h < _height; h++) {
+                _Pixels[w][h] = static_cast<num_f>(pixels1D[pixels1D_index2++]);
+            }
+        }  
+    
+        /*for (int i = 0; i < _width; i++) {
+        for (int j = 0; j < _height; j++) {
+            std::cout << _Pixels[i][j] << " ";
+        }
+        std::cout << std::endl;
+        }*/ 
+       
+        num_f weight;
+        num_f dx, dy;
+    
+        std::vector<num_f> _lookup2(40);
+        for (int n=0;n<40;n++)
+            _lookup2[n]=exp(-((num_f)(n+0.5))/8.0);
+
+
+        /*// Ispisivanje sadržaja niza _lookup2
+        for (const auto& value : _lookup2) {
+            std::cout << value << " ";
+        }
+        std::cout << std::endl;*/
+
+
+        if (r < 1+step  ||  r >= _height - 1-step  ||
+             c < 1+step  ||  c >= _width - 1-step)
+        return;
  
-    weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
+        weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
+    
+        cout << "weight: " << weight << endl;
   
-    num_f dxx, dyy;
+        num_f dxx, dyy;
 
-    dxx = weight*get_wavelet2(_Pixels, c, r, step);
-    dyy = weight*get_wavelet1(_Pixels, c, r, step);
-    dx = _cose*dxx + _sine*dyy;
-    dy = _sine*dxx - _cose*dyy;
+        dxx = weight*get_wavelet2(_Pixels, c, r, step);
+    
+        cout << "dxx: " << dxx << endl;
+        dyy = weight*get_wavelet1(_Pixels, c, r, step);
+        dx = _cose*dxx + _sine*dyy;
+        dy = _sine*dxx - _cose*dyy;
 
-    PlaceInIndex(dx, (dx<0?0:1), dy, (dy<0?2:3), rx, cx);
+        PlaceInIndex(dx, (dx<0?0:1), dy, (dy<0?2:3), rx, cx);
     
-    unsigned char *index_1d = new unsigned char[_IndexSize * _IndexSize * 4];
+        unsigned char *index_1d = new unsigned char[_IndexSize * _IndexSize * 4];
     
-    int index_1d_index = 0;
-    for (int i = 0; i < _IndexSize; ++i) {
-        for (int j = 0; j < _IndexSize; ++j) {
-            for (int k = 0; k < 4; ++k) {
-                index_1d[index_1d_index++] = _index[i][j][k];
+        int index_1d_index = 0;
+        for (int i = 0; i < _IndexSize; ++i) {
+            for (int j = 0; j < _IndexSize; ++j) {
+                for (int k = 0; k < 4; ++k) {
+                    index_1d[index_1d_index++] = _index[i][j][k];
+                }
             }
         }
-    }
     
-    for (int i = 0; i < _IndexSize * _IndexSize * 4; ++i) {
-        unsigned char value = index_1d[i];
+        for (int i = 0; i < _IndexSize * _IndexSize * 4; ++i) {
+            std::cout << index_1d[i] << " ";
+        }
+        std::cout << std::endl;
+    
+        for (int i = 0; i < _IndexSize * _IndexSize * 4; ++i) {
+            unsigned char value = index_1d[i];
         
-        write_mem(addr_index1 + i, value);
+            write_mem(addr_index1 + i, value);
+        }
+    
+    
+        delete[] index_1d;
+        delete[] pixels1D;
+        for (int i = 0; i < _width; i++) {
+            delete[] _Pixels[i];
+        }
+        delete[] _Pixels;
+    
+    
+        cout << "Upis iz IP-a u memoriju zavrsen" << endl;
+        ready = 1;
     }
-    
-    delete[] index_1d;
-    delete[] pixels1D;
-    for (int i = 0; i < _width; i++) {
-        delete[] _Pixels[i];
-    }
-    delete[] _Pixels;
-    
-    
-    cout << "Upis iz IP-a u memoriju zavrsen" << endl;
-    ready = 1;
     
 }
     
@@ -248,14 +262,15 @@ void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, 
 
 }
 
-void Ip::write_mem(sc_uint<64> addr, unsigned char val)
+//VIDI JE L DOBRA OVA FUNKCIJA
+void Ip::write_mem(sc_uint<64> addr, num_f val)
 {
     pl_t pl;
-    unsigned char buf;
-    buf = val;
+    unsigned char buf[4];
+    doubleToUchar(buf,val);
     pl.set_address(addr);
     pl.set_data_length(1);
-    pl.set_data_ptr(&buf);
+    pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_WRITE_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     mem_socket->b_transport(pl, offset);
