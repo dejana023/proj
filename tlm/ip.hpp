@@ -35,8 +35,9 @@ SC_MODULE(Ip)
         void PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, num_f cx);
         
         void write_mem(sc_uint<64> addr, num_f val);
-        unsigned char read_mem(sc_uint<64> addr);
+        void read_mem();
         
+        vector<num_f> mem;
 
         sc_core::sc_time offset;
         

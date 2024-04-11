@@ -119,23 +119,31 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
     else if (start == 0 && ready == 0)
     {
        cout << "Processing started" << endl;
-        
-       pixels1D = new unsigned char[_width * _height];
+       
+       vector<num_f> pixels1D;
        int pixels1D_index = 0;
-       for (int w = 0; w < _width; w++)
+       
+       read_mem();
+       
+       for (int i = 0; i < _width*_height; i++) {
+       cout << "mem: " << mem[i] << endl;
+       }
+       
+       /*for (int w = 0; w < _width; w++)
        {
            for (int h = 0; h < _height; h++)
            {
                pixels1D[pixels1D_index++] = read_mem(addr_Pixels1 + (w * _height + h));
            }
-       }
+       }*/
+       
        
        /*for (int w = 0; w < _width; w++) {
        for (int h = 0; h < _height; h++) {
                std::cout << static_cast<int>(pixels1D[w * _height + h]) << " ";
        }
            }*/
-
+           
         num_f** _Pixels = new num_f*[_width];
         for (int i = 0; i < _width; i++) {
             _Pixels[i] = new num_f[_height];
@@ -226,7 +234,7 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
     
     
         delete[] index_1d;
-        delete[] pixels1D;
+        //delete[] pixels1D;
         for (int i = 0; i < _width; i++) {
             delete[] _Pixels[i];
         }
@@ -301,17 +309,19 @@ void Ip::write_mem(sc_uint<64> addr, num_f val)
 }
 
 
-unsigned char Ip::read_mem(sc_uint<64> addr)
+void Ip::read_mem()
 {
+    for (int i=0; i < _width*_height; i++) {
     pl_t pl;
     unsigned char buf;
-    pl.set_address(addr);
-    pl.set_data_length(1);
+    pl.set_address(addr_Pixels1+i);
+    pl.set_data_length(sizeof(buf));
     pl.set_data_ptr(&buf);
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     mem_socket->b_transport(pl, offset);
-    return buf;
+    mem.push_back(num_f(*(&buf)));
+    }
 }
 
 #endif // IP_C

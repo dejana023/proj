@@ -25,7 +25,7 @@ public:
     void b_transport(pl_t&, sc_time&);
 
 protected:
-    vector <unsigned char> mem;
+    vector <num_f> mem;
 };
 
 #endif // MEM_H
