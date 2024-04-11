@@ -36,6 +36,7 @@ void Ip::b_transport(pl_t& pl, sc_time& offset)
                 case addr_start:
                     start = toInt(buf);
                     AddSample(r,c,rpos,cpos,rx,cx,step);
+                    				  cout << "start IP: " << start << endl;
                     break;
                 case addr_r:
                     r = toInt(buf);
@@ -172,7 +173,14 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
 
         if (r < 1+step  ||  r >= _height - 1-step  ||
              c < 1+step  ||  c >= _width - 1-step)
-        return;
+             {cout << "r: " << r << endl;
+             cout << "c: " << c << endl;
+             cout << "step: " << step << endl;
+             cout << "uslo u return" << endl;
+             //NAPRAVI OVDE LOGIKU AKO JE IF DA JAVIS CPU-U DA PONOVO TREBA DA POZOVE FUNKCIJU
+             
+             ready = 1;
+        return;}
  
         weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
     
@@ -184,10 +192,15 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
     
         cout << "dxx: " << dxx << endl;
         dyy = weight*get_wavelet1(_Pixels, c, r, step);
+                cout << "dyy: " << dyy << endl;
         dx = _cose*dxx + _sine*dyy;
+                cout << "dx: " << dx << endl;
         dy = _sine*dxx - _cose*dyy;
+                cout << "dy: " << dy << endl;
 
         PlaceInIndex(dx, (dx<0?0:1), dy, (dy<0?2:3), rx, cx);
+        
+        cout << "Izaslo iz PlaceInIndex" << endl;
     
         unsigned char *index_1d = new unsigned char[_IndexSize * _IndexSize * 4];
     
@@ -230,6 +243,8 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
 
 void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, num_f cx) {
     
+    cout << "Uslo u PlaceInIndex" << endl;
+    
     num_i ri = std::max(0, std::min(static_cast<int>(_IndexSize - 1), static_cast<int>(rx)));
     num_i ci = std::max(0, std::min(static_cast<int>(_IndexSize - 1), static_cast<int>(cx)));
   
@@ -243,9 +258,15 @@ void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, 
     num_f rweight2 = mag2 * (1.0 - rfrac);
     num_f cweight1 = rweight1 * (1.0 - cfrac);
     num_f cweight2 = rweight2 * (1.0 - cfrac);
+    
+    cout << ri << endl;
+    cout << ci << endl;
+    
+    cout << "Ispred ifova u PlaceInIndex" << endl;
   
 
     if (ri >= 0 && ri < _IndexSize && ci >= 0 && ci < _IndexSize) {
+            cout << "Uslo u prvi if" << endl;
         _index[ri][ci][ori1] += cweight1;
         _index[ri][ci][ori2] += cweight2;
     }
@@ -259,8 +280,11 @@ void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, 
         _index[ri + 1][ci][ori1] += mag1 * rfrac * (1.0 - cfrac);
         _index[ri + 1][ci][ori2] += mag2 * rfrac * (1.0 - cfrac);
     }
+    
+    cout << "Doslo na kraj PlaceInIndex" << endl;
 
 }
+
 
 //VIDI JE L DOBRA OVA FUNKCIJA
 void Ip::write_mem(sc_uint<64> addr, num_f val)
@@ -275,6 +299,7 @@ void Ip::write_mem(sc_uint<64> addr, num_f val)
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     mem_socket->b_transport(pl, offset);
 }
+
 
 unsigned char Ip::read_mem(sc_uint<64> addr)
 {

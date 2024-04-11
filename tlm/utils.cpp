@@ -2,7 +2,8 @@
 #include <iostream>
 #include <cstdint>
 #include <cstring>
-
+#include <sstream>
+#include <string>
 
 
 int toInt(unsigned char *buf)
@@ -47,6 +48,31 @@ void stringToChar (unsigned char *buf, string s)
     }
 }*/
 
+
+
+void intToUchar(unsigned char *buf,int val)
+{
+    buf[0] = (char) (val >> 24);
+    buf[1] = (char) (val >> 16);
+    buf[2] = (char) (val >> 8);
+    buf[3] = (char) (val);
+}
+
+
+void doubleToUchar(unsigned char *buf, double val)
+{
+    // Koristimo memcpy kako bismo sigurno kopirali memoriju iz double u uint64_t
+    uint64_t intVal;
+    static_assert(sizeof(intVal) == sizeof(val), "Size mismatch between double and uint64_t");
+    std::memcpy(&intVal, &val, sizeof(val));
+
+    // Kopiramo svaki bajt uint64_t-a u unsigned char niz
+    for (int i = 0; i < sizeof(uint64_t); ++i)
+    {
+        buf[i] = static_cast<unsigned char>((intVal >> (i * 8)) & 0xFF);
+    }
+}
+
 double toDouble(unsigned char *buf)
 {
     // Kreiramo 64-bitni integer i postavljamo ga na nulu
@@ -65,42 +91,4 @@ double toDouble(unsigned char *buf)
 
     return val;
 }
-      
-
-void intToUchar(unsigned char *buf,int val)
-{
-    buf[0] = (char) (val >> 24);
-    buf[1] = (char) (val >> 16);
-    buf[2] = (char) (val >> 8);
-    buf[3] = (char) (val);
-}
-
-/*void doubleToUchar(unsigned char *buf, double val)
-{
-    uint64_t intVal = *(reinterpret_cast<uint64_t*>(&val));
-    
-    buf[0] = static_cast<unsigned char>((intVal >> 56) & 0xFF);
-    buf[1] = static_cast<unsigned char>((intVal >> 48) & 0xFF);
-    buf[2] = static_cast<unsigned char>((intVal >> 40) & 0xFF);
-    buf[3] = static_cast<unsigned char>((intVal >> 32) & 0xFF);
-    buf[4] = static_cast<unsigned char>((intVal >> 24) & 0xFF);
-    buf[5] = static_cast<unsigned char>((intVal >> 16) & 0xFF);
-    buf[6] = static_cast<unsigned char>((intVal >> 8) & 0xFF);
-    buf[7] = static_cast<unsigned char>(intVal & 0xFF);
-}*/
-
-void doubleToUchar(unsigned char *buf, double val)
-{
-    // Koristimo memcpy kako bismo sigurno kopirali memoriju iz double u uint64_t
-    uint64_t intVal;
-    static_assert(sizeof(intVal) == sizeof(val), "Size mismatch between double and uint64_t");
-    std::memcpy(&intVal, &val, sizeof(val));
-
-    // Kopiramo svaki bajt uint64_t-a u unsigned char niz
-    for (int i = 0; i < sizeof(uint64_t); ++i)
-    {
-        buf[i] = static_cast<unsigned char>((intVal >> (i * 8)) & 0xFF);
-    }
-}
-
 

@@ -82,8 +82,8 @@ Surf::Surf(Image *im, bool dbl, int insi){
             std::cout << pixel << " ";
         }
         std::cout << std::endl;
-    }
-*/   
+    }*/
+  
   
  // allocate _index
 _index.resize(_IndexSize, std::vector<std::vector<num_f>>(

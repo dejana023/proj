@@ -36,6 +36,7 @@ SC_MODULE(Ip)
         
         void write_mem(sc_uint<64> addr, num_f val);
         unsigned char read_mem(sc_uint<64> addr);
+        
 
         sc_core::sc_time offset;
         
