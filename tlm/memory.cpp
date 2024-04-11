@@ -21,17 +21,11 @@ void Mem::b_transport(pl_t& pl, sc_time& offset)
     switch(cmd)
     {
         case TLM_WRITE_COMMAND:
-            if(addr+len != mem.size())
-                mem.resize(mem.size() - (mem.size()-addr)+len,0);
-                
             for(unsigned int i=0; i<len; i++)
             {       
-                unsigned int m = addr + i;
-                mem[m]=((num_f*)buf)[i];
+                mem[addr++]=buf[i];
                 //cout << "Upisano u mem:" ;
                 //cout << "Adresa: " << static_cast<int>(addr-1) << ", Upisan broj: " << static_cast<int>(mem[addr-1]) << endl;
-                //cout<< "mem[" << m << "] = " << mem[m] << endl;
-
 
             }
             pl.set_response_status(TLM_OK_RESPONSE);
@@ -42,9 +36,7 @@ void Mem::b_transport(pl_t& pl, sc_time& offset)
         case TLM_READ_COMMAND:
             for (unsigned int i = 0; i < len; ++i)
             {
-		buf = (unsigned char*)&mem[addr];
-		pl.set_data_ptr(buf);
-		pl.set_response_status(TLM_OK_RESPONSE);
+                buf[i] = mem[addr++];
                 //cout << "Procitano iz mem: " << i << endl;
             }
             pl.set_response_status(TLM_OK_RESPONSE);

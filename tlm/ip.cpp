@@ -119,14 +119,23 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
     else if (start == 0 && ready == 0)
     {
        cout << "Processing started" << endl;
-      
+        
+       pixels1D = new unsigned char[_width * _height];
+       int pixels1D_index = 0;
+       for (int w = 0; w < _width; w++)
+       {
+           for (int h = 0; h < _height; h++)
+           {
+               pixels1D[pixels1D_index++] = read_mem(addr_Pixels1 + (w * _height + h));
+           }
+       }
        
        /*for (int w = 0; w < _width; w++) {
        for (int h = 0; h < _height; h++) {
                std::cout << static_cast<int>(pixels1D[w * _height + h]) << " ";
        }
            }*/
-           
+
         num_f** _Pixels = new num_f*[_width];
         for (int i = 0; i < _width; i++) {
             _Pixels[i] = new num_f[_height];
@@ -217,7 +226,7 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
     
     
         delete[] index_1d;
-        //delete[] pixels1D;
+        delete[] pixels1D;
         for (int i = 0; i < _width; i++) {
             delete[] _Pixels[i];
         }
@@ -296,7 +305,7 @@ unsigned char Ip::read_mem(sc_uint<64> addr)
 {
     pl_t pl;
     unsigned char buf;
-    pl.set_address(addr_Pixels1+i);
+    pl.set_address(addr);
     pl.set_data_length(1);
     pl.set_data_ptr(&buf);
     pl.set_command(tlm::TLM_READ_COMMAND);

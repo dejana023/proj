@@ -374,28 +374,22 @@ void Cpu::createVector(double scale, double row, double col) {
           
                     //cout << "_cose CPU: " << _cose << endl;
           
-          num_f* pixels1D;
+          unsigned char* pixels1D;
           
           while(!done)
           {     
               if(ready)
               {
                   
-                  pixels1D = new num_f[_width * _height];
+                  pixels1D = new unsigned char[_width * _height];
                   int pixels1D_index = 0;
                   for (int w = 0; w < _width; w++)
                   {
                       for (int h = 0; h < _height; h++)
                       {
-                          pixels1D[pixels1D_index++] = static_cast<num_f>(_Pixels[w][h]);
+                          pixels1D[pixels1D_index++] = static_cast<unsigned char>(_Pixels[w][h]);
                       }
                   }
-                  
-                  for (long unsigned int i = 0; i < _width*_height; ++i)
-                  {
-                      mem.push_back(pixels1D[i]);
-                  }
-                  
                   
                   
           //ISPIS PIXELSA    
@@ -411,23 +405,9 @@ void Cpu::createVector(double scale, double row, double col) {
               std::cout << "///////////////////////////////////////////////////////////" << endl;*/
                 
                   for (int i = 0; i < _width * _height; i++)
-                  {
-                  pl_t pl;
-    offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
-    unsigned char* buf;
-    buf = (unsigned char*)&mem[i];
-    pl.set_address(addr_Pixels1+i);
-    pl.set_data_length(1);
-    pl.set_data_ptr(buf);
-    pl.set_command(tlm::TLM_WRITE_COMMAND);
-    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    interconnect_socket->b_transport(pl, offset);
+                      write_mem(addr_Pixels1+i, pixels1D[i]);
                   
-                  }
-                  
-                      //write_mem(addr_Pixels1+i, pixels1D[i]);
-                  
-                  //delete[] pixels1D;
+                  delete[] pixels1D;
               
                   need_start = 1;
               
@@ -502,19 +482,19 @@ void Cpu::createLookups() {
 }
 
 
-/*void Cpu::write_mem(sc_uint<64> addr, num_f val)
+void Cpu::write_mem(sc_uint<64> addr, unsigned char val)
 {
     pl_t pl;
     offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
-    unsigned char* buf;
-    buf = (unsigned char*)&mem[0];
+    unsigned char buf;
+    buf = val;
     pl.set_address(addr);
     pl.set_data_length(1);
-    pl.set_data_ptr(buf);
+    pl.set_data_ptr(&buf);
     pl.set_command(tlm::TLM_WRITE_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     interconnect_socket->b_transport(pl, offset);
-}*/
+}
 
 
 void Cpu::read_mem(sc_uint<64> addr, unsigned char *all_data, int length)
