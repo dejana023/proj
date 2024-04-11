@@ -411,7 +411,21 @@ void Cpu::createVector(double scale, double row, double col) {
               std::cout << "///////////////////////////////////////////////////////////" << endl;*/
                 
                   for (int i = 0; i < _width * _height; i++)
-                      write_mem(addr_Pixels1+i, pixels1D[i]);
+                  {
+                  pl_t pl;
+    offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+    unsigned char* buf;
+    buf = (unsigned char*)&mem[i];
+    pl.set_address(addr_Pixels1+i);
+    pl.set_data_length(1);
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_WRITE_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    interconnect_socket->b_transport(pl, offset);
+                  
+                  }
+                  
+                      //write_mem(addr_Pixels1+i, pixels1D[i]);
                   
                   //delete[] pixels1D;
               
@@ -488,7 +502,7 @@ void Cpu::createLookups() {
 }
 
 
-void Cpu::write_mem(sc_uint<64> addr, num_f val)
+/*void Cpu::write_mem(sc_uint<64> addr, num_f val)
 {
     pl_t pl;
     offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
@@ -500,7 +514,7 @@ void Cpu::write_mem(sc_uint<64> addr, num_f val)
     pl.set_command(tlm::TLM_WRITE_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     interconnect_socket->b_transport(pl, offset);
-}
+}*/
 
 
 void Cpu::read_mem(sc_uint<64> addr, unsigned char *all_data, int length)
