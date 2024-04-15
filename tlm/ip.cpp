@@ -38,43 +38,43 @@ void Ip::b_transport(pl_t& pl, sc_time& offset)
                 case addr_start:
                     start = toInt(buf);
                     AddSample(r,c,rpos,cpos,rx,cx,step);
-                    				  cout << "start IP: " << start << endl;
+                    				  //cout << "start IP: " << start << endl;
                     break;
                 case addr_r:
                     r = toInt(buf);
-                                                  //cout << "r IP: " << r << endl;
+                                                 // cout << "r IP: " << r << endl;
                     break;
                 case addr_c:
                     c = toInt(buf);
-                                                  //cout << "c IP: " << c << endl;
+                                                 // cout << "c IP: " << c << endl;
                     break;
                 case addr_rpos:
                     rpos = toDouble(buf);
-                                                  //cout << "rpos IP: " << rpos << endl;
+                                                 // cout << "rpos IP: " << rpos << endl;
                     break;
                 case addr_cpos:
                     cpos = toDouble(buf);
-                                                  //cout << "cpos IP: " << cpos << endl;
+                                                //  cout << "cpos IP: " << cpos << endl;
                     break;
                 case addr_rx:
                     rx = toDouble(buf);
-                                                  //cout << "rx IP: " << rx << endl;
+                                                //  cout << "rx IP: " << rx << endl;
                     break;
                 case addr_cx:
                     cx = toDouble(buf);
-                                                  //cout << "cx IP: " << cx << endl;
+                                                //  cout << "cx IP: " << cx << endl;
                     break;
                 case addr_step:
                     step = toInt(buf);
-                                                  //cout << "step IP: " << step << endl;
+                                                //  cout << "step IP: " << step << endl;
                     break;
                 case addr_cose:
                     _cose = toDouble(buf);
-                                                  //cout << "_cose IP: " << _cose << endl;
+                                               //   cout << "_cose IP: " << _cose << endl;
                     break;
                 case addr_sine:
                     _sine = toDouble(buf);
-                             			  //cout << "_sine IP: " << _sine << endl;
+                             			//  cout << "_sine IP: " << _sine << endl;
                     break;
                     
                 default:
@@ -105,21 +105,29 @@ void Ip::b_transport(pl_t& pl, sc_time& offset)
 void Ip::AddSample(num_i r, num_i c, num_f rpos,
                      num_f cpos, num_f rx, num_f cx, num_i step) {
                      
-                     cout<< "Uslo u addsample" << endl;
-                     cout << "start" << start << ", ready " << ready << endl;
+                   //  cout<< "Uslo u addsample" << endl;
+                  //   cout << "start" << start << ", ready " << ready << endl;
+                  
+                  //static int callCount = 0;
+    
+    // Inkrementiraj brojac
+    //callCount++;
+    
+    // Ispisi vrednost brojaca u terminalu
+    //cout << "AddSample je pozvan " << callCount << " puta." << endl;
                                                    
              vector<num_f> pixels1D;        
     if (start == 1 && ready == 1)
     {
     
-        cout << "Uslo u start=1 i ready=1" << endl;
+       // cout << "Uslo u start=1 i ready=1" << endl;
         ready = 0;
         offset += sc_time(DELAY, SC_NS);
     }
     
     else if (start == 0 && ready == 0)
     {
-       cout << "Processing started" << endl;
+     //  cout << "Processing started" << endl;
        
        //vector<num_f> pixels1D;
        int pixels1D_index = 0;
@@ -183,63 +191,27 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
             std::cout << value << " ";
         }
         std::cout << std::endl;*/
-
-
-        if (r < 1+step  ||  r >= _height - 1-step  ||
-             c < 1+step  ||  c >= _width - 1-step)
-             {cout << "r: " << r << endl;
-             cout << "c: " << c << endl;
-             cout << "step: " << step << endl;
-             cout << "uslo u return" << endl;
-             
-             ready = 1;
-        return;}
  
         weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
     
-        cout << "weight: " << weight << endl;
+        //cout << "weight: " << weight << endl;
   
         num_f dxx, dyy;
 
         dxx = weight*get_wavelet2(_Pixels, c, r, step);
     
-        cout << "dxx: " << dxx << endl;
+        //cout << "dxx: " << dxx << endl;
         dyy = weight*get_wavelet1(_Pixels, c, r, step);
-                cout << "dyy: " << dyy << endl;
+             //   cout << "dyy: " << dyy << endl;
         dx = _cose*dxx + _sine*dyy;
-                cout << "dx: " << dx << endl;
+             //   cout << "dx: " << dx << endl;
         dy = _sine*dxx - _cose*dyy;
-                cout << "dy: " << dy << endl;
+            //   cout << "dy: " << dy << endl;
 
         PlaceInIndex(dx, (dx<0?0:1), dy, (dy<0?2:3), rx, cx);
         
-        cout << "Izaslo iz PlaceInIndex" << endl;
-    
-        /*unsigned char *index_1d = new unsigned char[_IndexSize * _IndexSize * 4];
-    
-        int index_1d_index = 0;
-        for (int i = 0; i < _IndexSize; ++i) {
-            for (int j = 0; j < _IndexSize; ++j) {
-                for (int k = 0; k < 4; ++k) {
-                    index_1d[index_1d_index++] = _index[i][j][k];
-                }
-            }
-        }
-    
-        for (int i = 0; i < _IndexSize * _IndexSize * 4; ++i) {
-            std::cout << index_1d[i] << " ";
-        }
-        std::cout << std::endl;
-    
-        for (int i = 0; i < _IndexSize * _IndexSize * 4; ++i) {
-            unsigned char value = index_1d[i];
         
-            write_mem(addr_index1 + i, value);
-        }*/
-        
-        //OVDE MU JE SEGFAULT
-        
-        vector<num_f> index_1d;
+        num_f* index1D = new num_f[_IndexSize * _IndexSize * 4];
         
         //index_1d = new num_f[_IndexSize * _IndexSize * 4];
                   int index1D_index = 0;
@@ -248,14 +220,14 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
                       for (int j = 0; j < _IndexSize; j++)
                       {
                           for (int k = 0; k < _IndexSize; k++) {
-                              index_1d[index1D_index++] = static_cast<num_f>(_index[i][j][k]);
+                              index1D[index1D_index++] = static_cast<num_f>(_index[i][j][k]);
                           }
                       }
                   }
                   
                   for (long unsigned int i = 0; i < _IndexSize*_IndexSize*4; ++i)
                   {
-                      mem.push_back(index_1d[i]);
+                      mem.push_back(index1D[i]);
                   }
                   
                   
@@ -296,7 +268,7 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
         delete[] _Pixels;
     
     
-        cout << "Upis iz IP-a u memoriju zavrsen" << endl;
+      //  cout << "Upis iz IP-a u memoriju zavrsen" << endl;
         ready = 1;
     }
     
@@ -306,7 +278,7 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
 
 void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, num_f cx) {
     
-    cout << "Uslo u PlaceInIndex" << endl;
+  //  cout << "Uslo u PlaceInIndex" << endl;
     
     num_i ri = std::max(0, std::min(static_cast<int>(_IndexSize - 1), static_cast<int>(rx)));
     num_i ci = std::max(0, std::min(static_cast<int>(_IndexSize - 1), static_cast<int>(cx)));
@@ -322,24 +294,24 @@ void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, 
     num_f cweight1 = rweight1 * (1.0 - cfrac);
     num_f cweight2 = rweight2 * (1.0 - cfrac);
     
-   cout << "ri: " << ri << endl;
-    cout << "ci: " << ci << endl;
-    cout << "rweight1: " << rweight1 << endl;
-    cout << "_IndexSize: " << _IndexSize << endl;
+  // cout << "ri: " << ri << endl;
+  //  cout << "ci: " << ci << endl;
+  //  cout << "rweight1: " << rweight1 << endl;
+  //  cout << "_IndexSize: " << _IndexSize << endl;
     
-    cout << "Ispred ifova u PlaceInIndex" << endl;
+  //  cout << "Ispred ifova u PlaceInIndex" << endl;
     
 
     if (ri >= 0 && ri < _IndexSize && ci >= 0 && ci < _IndexSize) {
-            cout << "Uslo u prvi if" << endl;
-             cout << "Pristupam _index[" << ri << "][" << ci << "][" << ori1 << "]" << endl;
-    cout << "Pristupam _index[" << ri << "][" << ci << "][" << ori2 << "]" << endl;
+   //         cout << "Uslo u prvi if" << endl;
+   //          cout << "Pristupam _index[" << ri << "][" << ci << "][" << ori1 << "]" << endl;
+  //  cout << "Pristupam _index[" << ri << "][" << ci << "][" << ori2 << "]" << endl;
         _index[ri][ci][ori1] += cweight1;
         _index[ri][ci][ori2] += cweight2;
     } else {
-             cout << "Neuspesan pristup _index vektoru!" << endl;
-        cout << "ri: " << ri << ", ci: " << ci << endl;
-        cout << "_IndexSize: " << _IndexSize << endl;
+   //          cout << "Neuspesan pristup _index vektoru!" << endl;
+   //     cout << "ri: " << ri << ", ci: " << ci << endl;
+   //     cout << "_IndexSize: " << _IndexSize << endl;
     }
 
     if (ci + 1 < _IndexSize) {
@@ -352,9 +324,18 @@ void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, 
         _index[ri + 1][ci][ori2] += mag2 * rfrac * (1.0 - cfrac);
     }
     
-    cout << "Doslo na kraj PlaceInIndex" << endl;
-
+   // cout << "Doslo na kraj PlaceInIndex" << endl;
+   
+   /*cout << "Sadržaj _index niza:" << endl;
+    for (int i = 0; i < _IndexSize; ++i) {
+        for (int j = 0; j < _IndexSize; ++j) {
+            for (int k = 0; k < 4; ++k) {
+                cout << "_index[" << i << "][" << j << "][" << k << "]: " << _index[i][j][k] << endl;
+            }
+        }
+    }*/
 }
+
 
 
 //VIDI JE L DOBRA OVA FUNKCIJA
@@ -434,7 +415,7 @@ num_f Ip::read_mem(sc_dt::sc_uint<64> addr)
 	
 	num_f mega = toNum_f(buf);
 	
-	cout << "buf iz ip-a: " << mega << endl;
+	//cout << "buf iz ip-a: " << mega << endl;
 
 	return toNum_f(buf);
 }
