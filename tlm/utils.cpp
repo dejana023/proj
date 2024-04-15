@@ -16,6 +16,22 @@ int toInt(unsigned char *buf)
     return val;
 }
 
+num_f toNum_f(unsigned char *buf)
+{
+    uint64_t val = 0;
+
+    val += (uint64_t)(buf[0]) << 8;
+    val += (uint64_t)(buf[1]) << 16;
+    val += (uint64_t)(buf[2]) << 24;
+    val += (uint64_t)(buf[3]) << 32;
+    val += (uint64_t)(buf[4]) << 40;
+    val += buf[5];
+
+    return ((double)val / 1073741824.0); // 1073741824 = 2^30
+}
+
+
+
 /*double toDouble(unsigned char *buf)
 {
     double val = 0.0;

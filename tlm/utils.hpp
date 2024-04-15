@@ -2,6 +2,7 @@
 #define _UTILS_HPP_
 
 #include "addr.hpp"
+#include "types.hpp"
 #include <systemc>
 #include <iostream>
 #include <string.h>
@@ -20,6 +21,7 @@ int toInt(unsigned char *buf);
 void intToUchar(unsigned char *buf,int val);
 double toDouble(unsigned char *buf);
 void doubleToUchar(unsigned char *buf, double val);
+num_f toNum_f(unsigned char *buf);
 //void fixToChar(unsigned char *c, res_type d);
 //void stringToChar (unsigned char *buf, string s);
 

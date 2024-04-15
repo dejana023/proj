@@ -86,7 +86,8 @@ SC_MODULE(Cpu)
 		void makeDescriptor();
 		void saveIpoints(string sFileName, const vector< surf::Ipoint >& ipts);
 		
-		void read_mem(sc_uint<64> addr, unsigned char *all_data, int length);
+		num_f read_mem(sc_dt::sc_uint<64> addr);
+		//void read_mem(sc_uint<64> addr, unsigned char *all_data, int length);
 		//void write_mem(sc_uint<64> addr, num_f val);
 		int read_hard_int(sc_uint<64> addr);
 		double read_hard_double(sc_uint<64> addr);

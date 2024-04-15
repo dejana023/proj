@@ -9,6 +9,7 @@
 #include <fstream>
 #include <vector>
 #include "addr.hpp"
+#include "utils.hpp"
 #include "tlm_utils/tlm_quantumkeeper.h"
 
 using namespace std;

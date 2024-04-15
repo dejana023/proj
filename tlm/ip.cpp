@@ -9,6 +9,8 @@ Ip::Ip(sc_module_name name) :
     ready(1)
     
 {
+_index.resize(_IndexSize, std::vector<std::vector<num_f>>(
+        _IndexSize, std::vector<num_f>(4, 0.0f)));
         interconnect_socket.register_b_transport(this, &Ip::b_transport);
         cout << "IP constructed" << endl;
 }
@@ -105,9 +107,8 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
                      
                      cout<< "Uslo u addsample" << endl;
                      cout << "start" << start << ", ready " << ready << endl;
-                     
-              unsigned char *pixels1D;                 
-                     
+                                                   
+             vector<num_f> pixels1D;        
     if (start == 1 && ready == 1)
     {
     
@@ -120,27 +121,32 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
     {
        cout << "Processing started" << endl;
        
-       vector<num_f> pixels1D;
+       //vector<num_f> pixels1D;
        int pixels1D_index = 0;
+     
        
-       read_mem();
-       
-       for (int i = 0; i < _width*_height; i++) {
-       cout << "mem: " << mem[i] << endl;
-       }
-       
-       /*for (int w = 0; w < _width; w++)
+/*for (int i = 0; i < _width*_height; i++) {
+    int n = addr_Pixels1 + i;
+    num_f data = read_mem(n);
+    //cout << data << endl;
+    pixels1D.push_back(data);
+    cout << pixels1D[pixels1D_index++] << endl;
+}*/
+
+       for (int w = 0; w < _width; w++)
        {
+           offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
            for (int h = 0; h < _height; h++)
            {
-               pixels1D[pixels1D_index++] = read_mem(addr_Pixels1 + (w * _height + h));
+               offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+               pixels1D.push_back( read_mem(addr_Pixels1 + (w * _height + h)));
            }
-       }*/
+       }
        
        
        /*for (int w = 0; w < _width; w++) {
        for (int h = 0; h < _height; h++) {
-               std::cout << static_cast<int>(pixels1D[w * _height + h]) << " ";
+               std::cout << static_cast<num_f>((pixels1D[w * _height + h])) << " ";
        }
            }*/
            
@@ -162,7 +168,7 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
             std::cout << _Pixels[i][j] << " ";
         }
         std::cout << std::endl;
-        }*/ 
+        }*/
        
         num_f weight;
         num_f dx, dy;
@@ -185,7 +191,6 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
              cout << "c: " << c << endl;
              cout << "step: " << step << endl;
              cout << "uslo u return" << endl;
-             //NAPRAVI OVDE LOGIKU AKO JE IF DA JAVIS CPU-U DA PONOVO TREBA DA POZOVE FUNKCIJU
              
              ready = 1;
         return;}
@@ -210,7 +215,7 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
         
         cout << "Izaslo iz PlaceInIndex" << endl;
     
-        unsigned char *index_1d = new unsigned char[_IndexSize * _IndexSize * 4];
+        /*unsigned char *index_1d = new unsigned char[_IndexSize * _IndexSize * 4];
     
         int index_1d_index = 0;
         for (int i = 0; i < _IndexSize; ++i) {
@@ -230,10 +235,60 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
             unsigned char value = index_1d[i];
         
             write_mem(addr_index1 + i, value);
-        }
+        }*/
+        
+        //OVDE MU JE SEGFAULT
+        
+        vector<num_f> index_1d;
+        
+        //index_1d = new num_f[_IndexSize * _IndexSize * 4];
+                  int index1D_index = 0;
+                  for (int i = 0; i < _IndexSize; i++)
+                  {
+                      for (int j = 0; j < _IndexSize; j++)
+                      {
+                          for (int k = 0; k < _IndexSize; k++) {
+                              index_1d[index1D_index++] = static_cast<num_f>(_index[i][j][k]);
+                          }
+                      }
+                  }
+                  
+                  for (long unsigned int i = 0; i < _IndexSize*_IndexSize*4; ++i)
+                  {
+                      mem.push_back(index_1d[i]);
+                  }
+                  
+                  
+                  
+          //ISPIS PIXELSA    
+              /*for (int y = 0; y < _width; ++y)
+    	      {
+                  for (int x = 0; x < _height; ++x)
+                  {
+                      std::cout << static_cast<int>(pixels1D[y * _height + x]) << " ";
+                  }
+                  std::cout << std::endl;
+              }  
+              
+              std::cout << "///////////////////////////////////////////////////////////" << endl;*/
+                
+                  for (int i = 0; i < _IndexSize * _IndexSize * 4; i++)
+                  {
+                      pl_t pl;
+    		      offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+    		      unsigned char* buf;
+    		      buf = (unsigned char*)&mem[i];
+   		      pl.set_address(addr_index1+i);
+  		      pl.set_data_length(1);
+  		      pl.set_data_ptr(buf);
+   		      pl.set_command(tlm::TLM_WRITE_COMMAND);
+  		      pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  		      mem_socket->b_transport(pl, offset);
+                  
+                  }
     
     
-        delete[] index_1d;
+        //delete[] index_1d;
         //delete[] pixels1D;
         for (int i = 0; i < _width; i++) {
             delete[] _Pixels[i];
@@ -267,16 +322,24 @@ void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, 
     num_f cweight1 = rweight1 * (1.0 - cfrac);
     num_f cweight2 = rweight2 * (1.0 - cfrac);
     
-    cout << ri << endl;
-    cout << ci << endl;
+   cout << "ri: " << ri << endl;
+    cout << "ci: " << ci << endl;
+    cout << "rweight1: " << rweight1 << endl;
+    cout << "_IndexSize: " << _IndexSize << endl;
     
     cout << "Ispred ifova u PlaceInIndex" << endl;
-  
+    
 
     if (ri >= 0 && ri < _IndexSize && ci >= 0 && ci < _IndexSize) {
             cout << "Uslo u prvi if" << endl;
+             cout << "Pristupam _index[" << ri << "][" << ci << "][" << ori1 << "]" << endl;
+    cout << "Pristupam _index[" << ri << "][" << ci << "][" << ori2 << "]" << endl;
         _index[ri][ci][ori1] += cweight1;
         _index[ri][ci][ori2] += cweight2;
+    } else {
+             cout << "Neuspesan pristup _index vektoru!" << endl;
+        cout << "ri: " << ri << ", ci: " << ci << endl;
+        cout << "_IndexSize: " << _IndexSize << endl;
     }
 
     if (ci + 1 < _IndexSize) {
@@ -298,7 +361,7 @@ void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, 
 void Ip::write_mem(sc_uint<64> addr, num_f val)
 {
     pl_t pl;
-    unsigned char buf[4];
+    unsigned char buf[6];
     doubleToUchar(buf,val);
     pl.set_address(addr);
     pl.set_data_length(1);
@@ -309,19 +372,127 @@ void Ip::write_mem(sc_uint<64> addr, num_f val)
 }
 
 
-void Ip::read_mem()
+/*void Ip::read_mem(sc_uint<64> addr)
 {
-    for (int i=0; i < _width*_height; i++) {
+    //for (int i=0; i < _width*_height; i++) {
     pl_t pl;
-    unsigned char buf;
-    pl.set_address(addr_Pixels1+i);
-    pl.set_data_length(sizeof(buf));
-    pl.set_data_ptr(&buf);
+    unsigned char* buf = new unsigned char;
+    pl.set_address(addr);
+    pl.set_data_length(1);
+    pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     mem_socket->b_transport(pl, offset);
-    mem.push_back(num_f(*(&buf)));
-    }
+    //mem.push_back(num_f(*buf));
+    //mem[i] = ((num_f*)buf)[i];
+    //cout << mem[i] << endl;
+    //delete buf;
+    //}
+}*/
+
+/*num_f Ip::read_mem(sc_uint<64> addr)
+{
+    pl_t pl;
+    num_f result;
+    unsigned char* buf = reinterpret_cast<unsigned char*>(&result);
+    pl.set_address(addr);
+    pl.set_data_length(6); // Postavljamo dužinu podataka na dužinu tipa num_f
+    pl.set_data_ptr(buf); // Postavljamo pokazivač na bafer za čitanje
+    pl.set_command(tlm::TLM_READ_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    mem_socket->b_transport(pl, offset);
+    cout << result << endl;
+    return result;
+}*/
+
+//OVAJ RADI S NULAMA
+/*num_f Ip::read_mem(sc_uint<64> addr)
+{
+    pl_t pl;
+    num_f result;
+    pl.set_address(addr);
+    pl.set_data_length(1);
+    pl.set_data_ptr(reinterpret_cast<unsigned char*>(&result));
+    pl.set_command(tlm::TLM_READ_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    mem_socket->b_transport(pl, offset);
+    //cout << result.to_double() << endl;
+    return result;
+}*/
+
+num_f Ip::read_mem(sc_dt::sc_uint<64> addr)
+{
+	pl_t pl;
+	sc_dt::sc_int <64> val;
+	unsigned char buf[6];
+	pl.set_address(addr);
+	pl.set_data_length(6); 
+	pl.set_data_ptr(buf);
+	pl.set_command( tlm::TLM_READ_COMMAND );
+	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
+	mem_socket->b_transport(pl,offset);
+	
+	num_f mega = toNum_f(buf);
+	
+	cout << "buf iz ip-a: " << mega << endl;
+
+	return toNum_f(buf);
 }
+
+/*num_f Ip::read_mem(sc_uint<64> addr)
+{
+    pl_t pl;
+    unsigned char buf[sizeof(num_f)]; // Napravite bafer odgovarajuće veličine
+    pl.set_address(addr);
+    pl.set_data_length(sizeof(num_f)); // Postavite dužinu podataka na veličinu num_f
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_READ_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    mem_socket->b_transport(pl, offset);
+    return toDouble(buf); // Konvertujte podatke iz bafera u num_f pomoću vaše funkcije
+}*/
+
+
+
+
+/*num_f Ip::read_mem(sc_uint<64> addr)
+{
+    pl_t pl;
+    num_f result;
+    unsigned char* buf = new unsigned char[sizeof(result)];
+    pl.set_address(addr);
+    pl.set_data_length(sizeof(result));
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_READ_COMMAND);
+    
+    // Izvršavamo TLM transakciju
+    unsigned int status = mem_socket->transport_dbg(pl);
+    
+    //cout << "Reading from address: " << addr << endl;
+    //cout << "Data length: " << pl.get_data_length() << endl;
+    //cout << "Response status: " << status << endl;
+
+    if (status == 1) { // Ako je status 1, tada je odgovor OK
+        // Kopiramo podatke iz bafera u rezultujući tip
+        result = toNum_f(buf);
+        //cout << "Read result: " << result << endl;
+    } else {
+        //cout << "Error reading memory at address " << addr << endl;
+    }
+    
+    // Oslobađamo alociranu memoriju
+    delete[] buf;
+    
+    return result;
+}*/
+
+
+
+
+
+
+
+
+
 
 #endif // IP_C

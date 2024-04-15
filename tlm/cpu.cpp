@@ -258,13 +258,13 @@ void Cpu::assignOrientation() {
 void Cpu::makeDescriptor() {
   _current->allocIvec(_VecLength);
   
-  // Initialize _index array
+  /*// Initialize _index array
   for (int i = 0; i < _IndexSize; i++) {
     for (int j = 0; j < _IndexSize; j++) {
       for (int k = 0; k < _OriSize; k++)
         _index[i][j][k] = 0.0;
     }
-  }
+  }*/
 
     // calculate _sine and co_sine once
     _sine = sin(_current->ori);
@@ -339,11 +339,11 @@ void Cpu::createVector(double scale, double row, double col) {
           //VIDI GDE OVO TREBA
           write_hard_int(addr_r, r);
           
-                    cout << "r CPU: " << r << endl;
+                    //cout << "r CPU: " << r << endl;
           
           write_hard_int(addr_c, c);
           
-                    cout << "c CPU: " << c << endl;
+                    //cout << "c CPU: " << c << endl;
           
           write_hard_double(addr_rpos, rpos);
           
@@ -363,7 +363,7 @@ void Cpu::createVector(double scale, double row, double col) {
           
           write_hard_int(addr_step, step);
           
-                    cout << "step CPU: " << step << endl;
+                    //cout << "step CPU: " << step << endl;
           
           write_hard_double(addr_sine, _sine);
           
@@ -376,11 +376,12 @@ void Cpu::createVector(double scale, double row, double col) {
           
           num_f* pixels1D;
           
+                        vector<num_f> index1d;
+          
           while(!done)
-          {     
+          {    
               if(ready)
-              {
-                  
+              {   
                   pixels1D = new num_f[_width * _height];
                   int pixels1D_index = 0;
                   for (int w = 0; w < _width; w++)
@@ -412,18 +413,21 @@ void Cpu::createVector(double scale, double row, double col) {
                 
                   for (int i = 0; i < _width * _height; i++)
                   {
-                  pl_t pl;
-    offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
-    unsigned char* buf;
-    buf = (unsigned char*)&mem[i];
-    pl.set_address(addr_Pixels1+i);
-    pl.set_data_length(1);
-    pl.set_data_ptr(buf);
-    pl.set_command(tlm::TLM_WRITE_COMMAND);
-    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    interconnect_socket->b_transport(pl, offset);
+                      pl_t pl;
+    		      offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+    		      unsigned char* buf;
+    		      buf = (unsigned char*)&mem[i];
+   		      pl.set_address(addr_Pixels1+i);
+  		      pl.set_data_length(1);
+  		      pl.set_data_ptr(buf);
+   		      pl.set_command(tlm::TLM_WRITE_COMMAND);
+  		      pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  		      interconnect_socket->b_transport(pl, offset);
                   
                   }
+
+                  
+                  
                   
                       //write_mem(addr_Pixels1+i, pixels1D[i]);
                   
@@ -451,24 +455,29 @@ void Cpu::createVector(double scale, double row, double col) {
           
               ready = read_hard_int(addr_ready);
           
-              //cout << "Processing done" << endl;
+              cout << "Processing done" << endl;
               
-              unsigned char* index_1d = new unsigned char [_IndexSize * _IndexSize *4];
+
           
               if(ready)
-              {
-                  read_mem(addr_index1, index_1d, _IndexSize * _IndexSize *4);
+              { 
+                  cout << "PROBLEM U CPU: 464, verovatno postoji problem jer index niz jos nije popunjen a meni ovde bude if(ready) u koji udje kad se vrati iz 188 linije IP-a" << endl;
+               
+                  for (int i = 0; i < _IndexSize*_IndexSize*4; i++) {
+                  offset +=sc_core::sc_time(DELAY, sc_core::SC_NS);
+                   index1d.push_back(read_mem(addr_index1)+i);
+                   }
                   
                   int index_1d_index = 0;
                   for (int i = 0; i < _IndexSize; ++i) {
                       for (int j = 0; j < _IndexSize; ++j) {
                           for (int k = 0; k < 4; ++k) {
-                              _index[i][j][k] = index_1d[index_1d_index++];
+                              _index[i][j][k] = index1d[index_1d_index++];
                           }
                       }
                   }
                   
-                  delete[] index_1d;    
+                  //delete[] index_1d;    
                   
                   ready = 0;
                   need_start = 0;
@@ -517,7 +526,7 @@ void Cpu::createLookups() {
 }*/
 
 
-void Cpu::read_mem(sc_uint<64> addr, unsigned char *all_data, int length)
+/*void Cpu::read_mem(sc_uint<64> addr, unsigned char *all_data, int length)
 {
     offset += sc_core::sc_time((9+1)*DELAY, sc_core::SC_NS);
     
@@ -537,6 +546,25 @@ void Cpu::read_mem(sc_uint<64> addr, unsigned char *all_data, int length)
         all_data[n] = buf;
         n++;
     }
+}*/
+
+num_f Cpu::read_mem(sc_dt::sc_uint<64> addr)
+{
+	pl_t pl;
+	sc_dt::sc_int <64> val;
+	unsigned char buf[6];
+	pl.set_address(addr);
+	pl.set_data_length(6); 
+	pl.set_data_ptr(buf);
+	pl.set_command( tlm::TLM_READ_COMMAND );
+	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
+	interconnect_socket->b_transport(pl,offset);
+	
+	num_f mega = toNum_f(buf);
+	
+	cout << "buf iz cpu-a: " << mega << endl;
+
+	return toNum_f(buf);
 }
 
 int Cpu::read_hard_int(sc_uint<64> addr)

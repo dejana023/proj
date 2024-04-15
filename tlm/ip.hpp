@@ -35,7 +35,7 @@ SC_MODULE(Ip)
         void PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, num_f cx);
         
         void write_mem(sc_uint<64> addr, num_f val);
-        void read_mem();
+        num_f read_mem(sc_uint<64> addr);
         
         vector<num_f> mem;
 
