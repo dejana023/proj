@@ -191,6 +191,10 @@ void Ip::AddSample(num_i r, num_i c, num_f rpos,
             std::cout << value << " ";
         }
         std::cout << std::endl;*/
+        
+        static int counter;
+        counter ++;
+        cout << "uslo u add sample: " << counter << " puta, " << "rpos: " << rpos << "cpos: " << cpos << endl;
  
         weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
     
@@ -326,7 +330,7 @@ void Ip::PlaceInIndex(num_f mag1, num_i ori1, num_f mag2, num_i ori2, num_f rx, 
     
    // cout << "Doslo na kraj PlaceInIndex" << endl;
    
-   /*cout << "Sadržaj _index niza:" << endl;
+  /* cout << "Sadržaj _index niza:" << endl;
     for (int i = 0; i < _IndexSize; ++i) {
         for (int j = 0; j < _IndexSize; ++j) {
             for (int k = 0; k < 4; ++k) {

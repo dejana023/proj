@@ -267,6 +267,8 @@ void Surf::createVector(double scale, double y, double x) {
   double fracx = x-ix;
   double fracr =   _cose * fracy + _sine * fracx;
   double fracc = - _sine * fracy + _cose * fracx;
+  
+  //cout << "fracr: " << fracr << endl;
   //Odstupaju resenja za ova dva
   //std::cout << "fracy: " << fracy << ", fracx: " << fracx << endl;
   //std::cout << "fracc: " << fracc << ", fracr: " << fracr << endl;
@@ -291,6 +293,11 @@ void Surf::createVector(double scale, double y, double x) {
       cpos = (step*(- _sine * i + _cose * j) - fracc) / spacing;
       //std::cout << "rpos: " << rpos << ", cpos: " << cpos << endl;
       
+   /*               static int counter;
+        counter ++;
+        if (counter == 750)
+        cout << "uslo for petlju: " << counter << " puta, " << "rpos: " << rpos << "cpos: " << cpos << endl;*/
+      
       // Compute location of sample in terms of real-valued _index array
       // coordinates.  Subtract 0.5 so that rx of 1.0 means to put full
       // weight on _index[1] (e.g., when rpos is 0 and _IndexSize is 3.
@@ -301,6 +308,7 @@ void Surf::createVector(double scale, double y, double x) {
       // Test whether this sample falls within boundary of _index patch
       if (rx > -1.0 && rx < (double) _IndexSize  &&
           cx > -1.0 && cx < (double) _IndexSize)
+     
         AddSample(iy + i*step, ix + j*step, rpos, cpos,
                   rx, cx, (int)(scale));
                   
@@ -344,9 +352,14 @@ void Surf::AddSample(num_i r, num_i c, num_f rpos,
   
  // cout << "r: " << r << " " ;
   // Clip at image boundaries.
-  if (r < 1+step  ||  r >= _height - 1-step  ||
-      c < 1+step  ||  c >= _width - 1-step)
-     return;
+    if (r < 1+step  ||  r >= _height - 1-step  ||
+             c < 1+step  ||  c >= _width - 1-step){
+        return;}
+  
+           static int counter;
+        counter ++;
+        //if (counter == 105)
+        cout << "uslo u add sample: " << counter << " puta, " << "rpos: " << rpos << "cpos: " << cpos << endl;
  //cout << "step3: " << step << endl;
   weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
   //std::cout << "weight: " << weight << endl;

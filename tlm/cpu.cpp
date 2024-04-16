@@ -12,7 +12,6 @@ Cpu::Cpu(sc_module_name name,const std::string& image_name, int argc, char **arg
     SC_THREAD(software);
     
     ImLoad ImageLoader;
-    std::string fn = "../data/out.surf";
     std::string image_path = "../data/" + image_name + ".jpg"; // Formiranje putanje do slike
     _im = ImageLoader.readImage(image_path.c_str()); // Učitavanje slike iz datoteke
     if (!_im) {
@@ -78,7 +77,8 @@ void Cpu::software()
     }
     // stop measuring the time, we're all done
     gettimeofday(&tim2, &tz);
-
+    
+    std::string fn = "../data/out.surf";
     // save the interest points in the output file
     saveIpoints(fn, ipts);
 
@@ -288,16 +288,19 @@ void Cpu::makeDescriptor() {
 
 void Cpu::createVector(double scale, double row, double col) {
    int i, j, iradius, iy, ix;
-  double spacing, radius, rpos, cpos, rx, cx;
+  double spacing, radius, /*rpos, cpos,*/ rx, cx;
+  double rpos,cpos;
   int step = MAX((int)(scale/2 + 0.5),1);
   
-  iy = (int) (y + 0.5);
-  ix = (int) (x + 0.5);
+  iy = (int) (row + 0.5);
+  ix = (int) (col + 0.5);
 
-  double fracy = y-iy;
-  double fracx = x-ix;
+  double fracy = row-iy;
+  double fracx = col-ix;
   double fracr =   _cose * fracy + _sine * fracx;
   double fracc = - _sine * fracy + _cose * fracx;
+  
+  //cout << "fracr: " << fracr << endl;
   
   // The spacing of _index samples in terms of pixels at this scale
   spacing = scale * _MagFactor;
@@ -351,6 +354,10 @@ void Cpu::createVector(double scale, double row, double col) {
       rpos = (step*(_cose * i + _sine * j) - fracr) / spacing;
       cpos = (step*(- _sine * i + _cose * j) - fracc) / spacing;
       
+    /*              static int counter;
+        counter ++;
+        cout << "uslo u for petlju: " << counter << " puta, " << "rpos: " << rpos << "cpos: " << cpos << endl;*/
+      
       // Compute location of sample in terms of real-valued _index array
       // coordinates.  Subtract 0.5 so that rx of 1.0 means to put full
       // weight on _index[1] (e.g., when rpos is 0 and _IndexSize is 3.
@@ -364,16 +371,16 @@ void Cpu::createVector(double scale, double row, double col) {
           int r = iy + i*step;
           int c = ix + j*step; 
           
-          bool done = 0;
-          int ready = 1;
-          bool need_start = 0;
+
          // bool new_ch = 1;
           if (r < 1+step  ||  r >= _height - 1-step  ||
              c < 1+step  ||  c >= _width - 1-step){
         continue;}
         
-        else {
-          
+        //else {
+                    bool done = 0;
+          int ready = 1;
+          bool need_start = 0;
           //VIDI GDE OVO TREBA
           write_hard_int(addr_r, r);
           
@@ -465,7 +472,7 @@ void Cpu::createVector(double scale, double row, double col) {
                       }
                   }
                   
-                  cout << "bla" << endl
+                  //cout << "bla" << endl;
                   
                   //delete[] index_1d;    
                   
@@ -477,7 +484,7 @@ void Cpu::createVector(double scale, double row, double col) {
           
           }
       }
-    }        
+          
     
 }
 
